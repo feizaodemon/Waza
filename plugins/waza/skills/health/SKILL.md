@@ -32,6 +32,16 @@ Two lanes share one report:
 
 **Budget posture:** Start with the summary audit. Escalate automatically when the user asks for a deep, full, complete, thorough, "深入", "完整", "彻底", or "继续跑完" audit, when the user explicitly mentions AI coding code rot, Codex/Claude config drift, unclear context, missing verification, verifier output that points at stale paths, or "代码变烂", when current project instructions or remembered user preference says to run deep health checks by default, when the project is Complex, or when the summary pass exposes a critical ambiguity that cannot be resolved locally. Otherwise do not read full conversation extracts or launch inspector subagents. Tell the user before escalating because deep health audits can consume significant token quota.
 
+## Execution modes and project-command boundary
+
+Health inspects agent configuration, instruction surfaces, tooling, verifier definitions, existing verifier evidence, and maintainability signals. It does not execute project test suites, verifier commands, generators, builds, formatters, package installation, fixture refreshes, or snapshot updates unless the user explicitly authorizes a separate live-verification step.
+
+- **Default summary/report-only:** Run Health-owned collectors and harmless probes; inspect Git metadata, verifier definitions, and existing logs. Repository files stay read-only. The update check may write only its normal user-cache marker outside the target repository.
+- **Deep report-only:** Read more project files, logs, and Health evidence, but retain the same no-project-command rule.
+- **Explicit live verification:** Available only when the user explicitly authorizes it. Before execution, state the command, expected writes, target paths, isolation strategy, and rollback or disposable-environment plan. Prefer a temporary clone, worktree, or synthetic fixture.
+
+Neutral prompts do not authorize live verification. Requests such as “检查项目是否正常” or “帮我收尾” permit reporting on a documented `verify.py`, `Makefile check`, `npm test`, or unittest command, but not executing it.
+
 ## Durable Context Preflight
 
 See [references/durable-context.md](references/durable-context.md) for when to read durable context, the read-order budget, and the memory-type mapping.
@@ -250,6 +260,7 @@ If no issues: `All relevant checks passed. Nothing to fix.`
 ## Non-goals
 
 - Never auto-apply fixes without confirmation.
+- Never execute project tests, verifiers, generators, builds, formatters, package installs, fixture refreshes, or snapshot updates in summary or deep report-only mode.
 - Never apply complex-tier checks to simple projects.
 - Never act as a heavy lint, typecheck, duplication, or architecture-rewrite substitute; `/health` reports maintainability guardrails and concrete next actions only.
 
